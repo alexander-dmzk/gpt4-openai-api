@@ -1,0 +1,9 @@
+langchain
+markdownify
+pyvirtualdisplay
+selenium
+webdriver-manager
+uvicorn
+fastapi
+pydantic
+starlette

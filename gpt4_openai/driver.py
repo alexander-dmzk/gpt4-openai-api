@@ -3,8 +3,10 @@ from selenium.common import exceptions as SeleniumExceptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver import Chrome, ChromeOptions, ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
-import undetected_chromedriver as uc
 from markdownify import markdownify
 from threading import Thread
 import platform
@@ -185,19 +187,22 @@ class ChatGptDriver:
             self.display.start()
 
         self.logger.debug('Initializing browser...')
-        options = uc.ChromeOptions()
+        driver_path = ChromeDriverManager(
+            chrome_type=ChromeType.CHROMIUM).install()
+        options = ChromeOptions()
+        service = ChromeService(executable_path=driver_path)
         if self.__headless:
             options.add_argument('--headless')
+            options.add_argument('--window-size=1920x1080')
         if self.__proxy:
             options.add_argument(f'--proxy-server={self.__proxy}')
         for arg in self.__chrome_args:
             options.add_argument(arg)
-        try:
-            self.driver = uc.Chrome(options=options)
-        except TypeError as e:
-            if str(e) == 'expected str, bytes or os.PathLike object, not NoneType':
-                raise ValueError('Chrome installation not found')
-            raise e
+        options.add_argument('--no-sandbox')
+        options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--disable-dev-shm-usage')
+        self.driver = Chrome(service=service, options=options)
+        self.driver.implicitly_wait(10)
 
         if self.__login_cookies_path and os.path.exists(self.__login_cookies_path):
             self.logger.debug('Restoring cookies...')

@@ -10,10 +10,6 @@ It supports both **GPT4 browser and plugins** by selecting model via `GPT4OpenAI
 
 The core logic was taken from the [IntelligenzaArtificiale/Free-Auto-GPT](https://github.com/IntelligenzaArtificiale/Free-Auto-GPT).
 
-## Demo
-
-![Demo GIF](https://user-images.githubusercontent.com/18037362/236707120-e93d40bc-b73b-4f72-bc7d-d0449a082946.gif)
-
 ## Demo script
 
 ```python
@@ -76,23 +72,3 @@ AI: Ahoy, me name be John an' I be likin' ta feast on some pizza, arr!
 3. Copy the value in the `Cookie Value` field.
 
 ![image](https://user-images.githubusercontent.com/19218518/206170122-61fbe94f-4b0c-4782-a344-e26ac0d4e2a7.png)
-
-## OpenAI's GPT4 vs other providers
-
-Initially, I tried [poe.com ](https://poe.com/) (private API implemented at [gpt4free](https://github.com/gptforfree/gpt4free/tree/main/quora)), but noticed that input context window is smaller than one of OpenAI ChatGPT. And the same goes for Bing's GPT4.
-
-## Installation
-
-To install this Python package, run the following command:
-
-```bash
-pip install gpt4-openai-api
-```
-
-## Dependencies
-
-These dependencies get downloaded directly:
-
-- `undetected-chromedriver` (selenium browser)
-- `markdownify`
-- `langchain`
