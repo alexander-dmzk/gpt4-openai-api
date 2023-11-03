@@ -245,7 +245,7 @@ class ChatGptDriver:
         self.__check_blocking_elements()
 
         self.__is_active = True
-        Thread(target=self.__keep_alive, daemon=True).start()
+        # Thread(target=self.__keep_alive, daemon=True).start()
 
     def __ensure_cf(self, retry: int = 3) -> None:
         '''
@@ -442,9 +442,9 @@ class ChatGptDriver:
         :param message: Message to send
         :return: Dictionary with keys `message` and `conversation_id`
         '''
-        self.logger.debug('Ensuring Cloudflare cookies...')
-        self.__ensure_cf()
-        #self.__check_blocking_elements()
+        # self.logger.debug('Ensuring Cloudflare cookies...')
+        # self.__ensure_cf()
+        # self.__check_blocking_elements()
 
         # Wait for page to load
         try:
