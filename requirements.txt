@@ -1,4 +1,3 @@
-langchain
 markdownify
 pyvirtualdisplay
 selenium
@@ -7,3 +6,4 @@ uvicorn
 fastapi
 pydantic
 starlette
+sse-starlette
