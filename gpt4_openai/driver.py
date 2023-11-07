@@ -280,11 +280,11 @@ class ChatGptDriver:
                     break
                 self.__sleep(0.1)
         finally:
-            url = self.driver.current_url
+            # url = self.driver.current_url
             self.driver.save_screenshot('test.jpg')
             self.close_driver()
-            self.conversation_id = self.get_conversation_id(url)
-            yield self.conversation_id
+            # self.conversation_id = self.get_conversation_id(url)
+            # yield self.conversation_id
 
     def send_message(self, message: str, stream: bool = False):
         # Wait for page to load
@@ -355,9 +355,9 @@ class ChatGptDriver:
             except Exception as e:
                 content = str(e)
             finally:
-                url = self.driver.current_url
+                # url = self.driver.current_url
                 self.close_driver()
-                self.conversation_id = self.get_conversation_id(url)
+                # self.conversation_id = self.get_conversation_id(url)
                 return {'message': content,
                         'conversation_id': self.conversation_id}
 
