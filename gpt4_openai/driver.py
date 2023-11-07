@@ -268,27 +268,30 @@ class ChatGptDriver:
             pass
 
     def __stream_message(self):
-        prev_content = ''
-        while True:
-            result_streaming = self.driver.find_elements(*chatgpt_streaming)
-            responses = self.driver.find_elements(*chatgpt_big_response)
-            if responses:
-                response = responses[-1]
-                if 'text-red' in response.get_attribute('class'):
-                    raise ValueError(response.text)
-            if result_streaming:
-                content = result_streaming[-1].text
-            else:
-                content = ''
-            if content != prev_content:
-                yield content[len(prev_content):]
-                prev_content = content
-            if not result_streaming:
-                break
-            self.__sleep(0.1)
-        self.conversation_id = self.get_conversation_id()
-        self.close_driver()
-        yield self.conversation_id
+        try:
+            prev_content = ''
+            while True:
+                result_streaming = self.driver.find_elements(*chatgpt_streaming)
+                responses = self.driver.find_elements(*chatgpt_big_response)
+                if responses:
+                    response = responses[-1]
+                    if 'text-red' in response.get_attribute('class'):
+                        raise ValueError(response.text)
+                if result_streaming:
+                    content = result_streaming[-1].text
+                else:
+                    content = ''
+                if content != prev_content:
+                    yield content[len(prev_content):]
+                    prev_content = content
+                if not result_streaming:
+                    break
+                self.__sleep(0.1)
+        finally:
+            url = self.driver.current_url
+            self.close_driver()
+            self.conversation_id = self.get_conversation_id(url)
+            yield self.conversation_id
 
     def send_message(self, message: str, stream: bool = False):
         # Wait for page to load
@@ -339,30 +342,35 @@ class ChatGptDriver:
         if stream:
             return self.__stream_message()
         else:
-            WebDriverWait(self.driver, 20).until(
-                # When the "Stop generating" button is gone,
-                # it means the generation is done
-                ec.presence_of_element_located(stop_generating)
-            )
+            content = ''
+            try:
+                WebDriverWait(self.driver, 20).until(
+                    # When the "Stop generating" button is gone,
+                    # it means the generation is done
+                    ec.presence_of_element_located(stop_generating)
+                )
 
-            responses = self.driver.find_elements(*chatgpt_big_response)
-            if responses:
-                response = responses[-1]
-                if 'text-red' in response.get_attribute('class'):
-                    raise ValueError(response.text)
-            response = self.driver.find_elements(*chatgpt_small_response)[-1]
+                responses = self.driver.find_elements(*chatgpt_big_response)
+                if responses:
+                    response = responses[-1]
+                    if 'text-red' in response.get_attribute('class'):
+                        raise ValueError(response.text)
+                response = self.driver.find_elements(*chatgpt_small_response)[-1]
 
-            content = markdownify(response.get_attribute('innerHTML')).replace(
-                'Copy code`', '`'
-            )
+                content = markdownify(response.get_attribute(
+                    'innerHTML')).replace('Copy code`', '`')
+            except Exception as e:
+                content = str(e)
+            finally:
+                url = self.driver.current_url
+                self.close_driver()
+                self.conversation_id = self.get_conversation_id(url)
+                return {'message': content,
+                        'conversation_id': self.conversation_id}
 
-            self.conversation_id = self.get_conversation_id()
-            self.close_driver()
-            return {'message': content,
-                    'conversation_id': self.conversation_id}
-
-    def get_conversation_id(self):
-        matches = self.conversation_id_pattern.search(self.driver.current_url)
+    def get_conversation_id(self, url):
+        print(url)
+        matches = self.conversation_id_pattern.search(url)
         conversation_id = matches.group()
         return conversation_id
 
