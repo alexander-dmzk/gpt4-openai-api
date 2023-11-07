@@ -285,10 +285,10 @@ class ChatGptDriver(metaclass=Singleton):
                 self.driver.close()
         # Wait for page to load
         try:
-            WebDriverWait(self.driver, 3).until(
+            WebDriverWait(self.driver, 5).until(
                 ec.element_to_be_clickable(chatgpt_textbox)
             )
-        except SeleniumExceptions.ElementClickInterceptedException():
+        except SeleniumExceptions.ElementClickInterceptedException:
             pass
 
         # Check for dismiss button
@@ -306,9 +306,9 @@ class ChatGptDriver(metaclass=Singleton):
                 ec.element_to_be_clickable(chatgpt_textbox)
             )
             textbox.click()
-        except SeleniumExceptions.ElementClickInterceptedException():
+        except SeleniumExceptions.ElementClickInterceptedException:
             self.__check_blocking_elements()
-            textbox = WebDriverWait(self.driver, 3).until(
+            textbox = WebDriverWait(self.driver, 5).until(
                 ec.element_to_be_clickable(chatgpt_textbox)
             )
             textbox.click()
