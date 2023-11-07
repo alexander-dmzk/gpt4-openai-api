@@ -15,7 +15,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
 
-from singleton import Singleton
 
 cf_challenge_form = (By.ID, 'challenge-form')
 
@@ -46,7 +45,7 @@ stop_generating = (By.XPATH, "//button[contains(., 'Stop generating')]")
 regenerate_response = (By.XPATH, "//*[.//div[contains(text(), 'Regenerate')]]")
 
 
-class ChatGptDriver(metaclass=Singleton):
+class ChatGptDriver:
     """
     An unofficial Python wrapper for OpenAI's ChatGPT API
     """
@@ -55,7 +54,6 @@ class ChatGptDriver(metaclass=Singleton):
             self,
             session_token,
             conversation_id: str = '',
-            login_cookies_path: str = '',
             model: str = 'gpt4'
     ):
         """
@@ -64,9 +62,6 @@ class ChatGptDriver(metaclass=Singleton):
             authentication
         :param conversation_id: The conversation ID to use for the
             chat session
-        :param login_cookies_path: The path to the cookies file to use
-            for authentication
-        :param moderation: Whether to enable message moderation
         """
 
         self.__session_token = session_token
@@ -75,9 +70,6 @@ class ChatGptDriver(metaclass=Singleton):
         self._model = model
         self._chatgpt_chat_url = 'https://chat.openai.com'
 
-        self.conversation_id_pattern = re.compile(
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-        )
         self.is_active = False
 
         if not self.__session_token:
@@ -298,6 +290,7 @@ class ChatGptDriver(metaclass=Singleton):
                     break
                 self.__sleep(0.1)
         finally:
+            self.driver.save_screenshot('stream_finished.png')
             self.close_driver()
 
     def send_message(self, message: str, model='gpt-4-browsing'):
@@ -351,7 +344,7 @@ class ChatGptDriver(metaclass=Singleton):
             textbox,
             message,
         )
-
+        self.driver.save_screenshot('before_message_sent.png')
         self.__sleep(0.5)
         textbox.send_keys(Keys.ENTER)
         button = textbox.find_element(By.XPATH, "./ancestor::div/button")
