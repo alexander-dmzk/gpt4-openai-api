@@ -224,10 +224,24 @@ class ChatGptDriver(metaclass=Singleton):
         try:
             # FInd a button to dismiss the dialog with
             # class="btn relative btn-primary" inside the div[@role="dialog"]
-            btn_to_dismiss = WebDriverWait(self.driver, 5).until(
+            btn_to_dismiss = WebDriverWait(self.driver, 2).until(
                 ec.presence_of_element_located(
                     (By.XPATH,
                      '//*[@id="radix-:r2i:"]/div/div[3]/button'))
+            )
+            if btn_to_dismiss:
+                self.driver.execute_script('arguments[0].click()',
+                                           btn_to_dismiss)
+        except Exception:
+            pass
+
+        try:
+            # FInd a button to dismiss the dialog with
+            # class="btn relative btn-primary" inside the div[@role="dialog"]
+            btn_to_dismiss = WebDriverWait(self.driver, 2).until(
+                ec.presence_of_element_located(
+                    (By.XPATH,
+                     '/html/body/div[6]/div/div/div/div/div[3]/button'))
             )
             if btn_to_dismiss:
                 self.driver.execute_script('arguments[0].click()',
