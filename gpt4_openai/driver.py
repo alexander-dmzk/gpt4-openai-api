@@ -55,8 +55,7 @@ class ChatGptDriver:
             session_token: str = None,
             conversation_id: str = '',
             login_cookies_path: str = '',
-            model: str = 'gpt4',
-            moderation: bool = True
+            model: str = 'gpt4'
     ):
         """
         Initialize the ChatGPT object\n
@@ -72,7 +71,6 @@ class ChatGptDriver:
         self.__session_token = session_token
         self.conversation_id = conversation_id
         self.__login_cookies_path = login_cookies_path
-        self.__moderation = moderation
 
         self._model = model
         self._chatgpt_chat_url = 'https://chat.openai.com'
@@ -173,12 +171,6 @@ class ChatGptDriver:
                     'httpOnly': True,
                     'secure': True,
                 },
-            )
-
-        if not self.__moderation:
-            self.driver.execute_cdp_cmd(
-                'Network.setBlockedURLs',
-                {'urls': ['https://chat.openai.com/backend-api/moderations']},
             )
 
         self.__ensure_cf()
