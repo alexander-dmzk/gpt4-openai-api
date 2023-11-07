@@ -175,9 +175,6 @@ class ChatGptDriver:
 
         self.__ensure_cf()
 
-        self.driver.get(self._get_url())
-        self.__check_blocking_elements()
-
     def __ensure_cf(self, retry: int = 3) -> None:
         """
         Ensure Cloudflare cookies are set\n
@@ -281,15 +278,23 @@ class ChatGptDriver:
                 self.__sleep(0.1)
         finally:
             # url = self.driver.current_url
-            self.driver.save_screenshot('test.jpg')
             self.close_driver()
             # self.conversation_id = self.get_conversation_id(url)
             # yield self.conversation_id
 
-    def send_message(self, message: str, stream: bool = False):
+    def send_message(self, message: str, model='gpt-4-browsing'):
+        self._model = model
+        self.driver.get(self._get_url())
+        self.__check_blocking_elements()
+
+        cur_hwnd = self.driver.current_window_handle
+        for hwnd in self.driver.window_handles:
+            if hwnd != cur_hwnd:
+                self.driver.switch_to.window(hwnd)
+                self.driver.close()
         # Wait for page to load
         try:
-            WebDriverWait(self.driver, 10).until(
+            WebDriverWait(self.driver, 3).until(
                 ec.element_to_be_clickable(chatgpt_textbox)
             )
         except SeleniumExceptions.ElementClickInterceptedException():
@@ -312,7 +317,7 @@ class ChatGptDriver:
             textbox.click()
         except SeleniumExceptions.ElementClickInterceptedException():
             self.__check_blocking_elements()
-            textbox = WebDriverWait(self.driver, 10).until(
+            textbox = WebDriverWait(self.driver, 3).until(
                 ec.element_to_be_clickable(chatgpt_textbox)
             )
             textbox.click()
@@ -331,35 +336,7 @@ class ChatGptDriver:
         textbox.send_keys(Keys.ENTER)
         button = textbox.find_element(By.XPATH, "./ancestor::div/button")
         button.click()
-
-        if stream:
-            return self.__stream_message()
-        else:
-            content = ''
-            try:
-                WebDriverWait(self.driver, 20).until(
-                    # When the "Stop generating" button is gone,
-                    # it means the generation is done
-                    ec.presence_of_element_located(stop_generating)
-                )
-
-                responses = self.driver.find_elements(*chatgpt_big_response)
-                if responses:
-                    response = responses[-1]
-                    if 'text-red' in response.get_attribute('class'):
-                        raise ValueError(response.text)
-                response = self.driver.find_elements(*chatgpt_small_response)[-1]
-
-                content = markdownify(response.get_attribute(
-                    'innerHTML')).replace('Copy code`', '`')
-            except Exception as e:
-                content = str(e)
-            finally:
-                # url = self.driver.current_url
-                self.close_driver()
-                # self.conversation_id = self.get_conversation_id(url)
-                return {'message': content,
-                        'conversation_id': self.conversation_id}
+        return self.__stream_message()
 
     def get_conversation_id(self, url):
         print(url)
