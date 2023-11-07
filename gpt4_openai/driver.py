@@ -20,12 +20,6 @@ cf_challenge_form = (By.ID, 'challenge-form')
 
 chatgpt_textbox = (By.TAG_NAME, 'textarea')
 chatgpt_streaming = (By.CLASS_NAME, 'result-streaming')
-chatgpt_big_response = (
-    By.XPATH, '//div[@class="flex-1 overflow-hidden"]//div[p]')
-chatgpt_small_response = (
-    By.XPATH,
-    '//div[starts-with(@class, "markdown prose w-full break-words")]',
-)
 chatgpt_alert = (By.XPATH, '//div[@role="alert"]')
 chatgpt_dialog = (By.XPATH, '//div[@role="dialog"]')
 chatgpt_intro = (By.ID, 'headlessui-portal-root')
@@ -271,16 +265,11 @@ class ChatGptDriver:
 
     def __stream_message(self):
         try:
-            time.sleep(1)
+            time.sleep(5)
             prev_content = ''
             while True:
                 self.driver.save_screenshot('stream_started.png')
                 result_streaming = self.driver.find_elements(*chatgpt_streaming)
-                responses = self.driver.find_elements(*chatgpt_big_response)
-                if responses:
-                    response = responses[-1]
-                    if 'text-red' in response.get_attribute('class'):
-                        raise ValueError(response.text)
                 if result_streaming:
                     content = result_streaming[-1].text
                 else:
@@ -289,11 +278,13 @@ class ChatGptDriver:
                     yield content[len(prev_content):]
                     prev_content = content
                 if not content:
-                    self.driver.save_screenshot('no content')
+                    self.driver.save_screenshot('no content.png')
                     with open('no_content.html', 'w') as f:
                         f.write(self.driver.page_source)
                 print('content: ', content)
                 if not result_streaming:
+                    with open('no_result_streaming.html', 'w') as f:
+                        f.write(self.driver.page_source)
                     break
                 self.__sleep(0.1)
         finally:
