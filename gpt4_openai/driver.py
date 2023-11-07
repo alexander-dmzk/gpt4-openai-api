@@ -141,6 +141,8 @@ class ChatGptDriver:
         driver_path = ChromeDriverManager(
             chrome_type=ChromeType.CHROMIUM).install()
         options = ChromeOptions()
+        if os.getenv('CHROMIUM_PATH'):
+            options.binary_location = os.environ['CHROMIUM_PATH']
         service = ChromeService(executable_path=driver_path)
         options.add_argument('--no-sandbox')
         options.add_argument('--remote-debugging-port=9222')
