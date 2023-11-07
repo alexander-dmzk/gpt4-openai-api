@@ -274,6 +274,7 @@ class ChatGptDriver:
             time.sleep(1)
             prev_content = ''
             while True:
+                self.driver.save_screenshot('stream_started.png')
                 result_streaming = self.driver.find_elements(*chatgpt_streaming)
                 responses = self.driver.find_elements(*chatgpt_big_response)
                 if responses:
@@ -287,6 +288,10 @@ class ChatGptDriver:
                 if content != prev_content:
                     yield content[len(prev_content):]
                     prev_content = content
+                if not content:
+                    self.driver.save_screenshot('no content')
+                    with open('no_content.html', 'w') as f:
+                        f.write(self.driver.page_source)
                 print('content: ', content)
                 if not result_streaming:
                     break
