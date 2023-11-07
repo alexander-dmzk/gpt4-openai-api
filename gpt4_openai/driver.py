@@ -195,7 +195,7 @@ class ChatGptDriver:
         try:
             # FInd a button to dismiss the dialog with
             # class="btn relative btn-primary" inside the div[@role="dialog"]
-            btn_to_dismiss = WebDriverWait(self.driver, 5).until(
+            btn_to_dismiss = WebDriverWait(self.driver, 3).until(
                 ec.presence_of_element_located(
                     (By.XPATH,
                      '//div[@role="dialog"]//button[@class="btn relative '
@@ -236,6 +236,20 @@ class ChatGptDriver:
             pass
 
         try:
+            # FInd a button to dismiss the dialog with
+            # class="btn relative btn-primary" inside the div[@role="dialog"]
+            btn_to_dismiss = WebDriverWait(self.driver, 2).until(
+                ec.presence_of_element_located(
+                    (By.XPATH,
+                     '/html/body/div[5]/div/div/div/div/div[3]/button'))
+            )
+            if btn_to_dismiss:
+                self.driver.execute_script('arguments[0].click()',
+                                           btn_to_dismiss)
+        except Exception:
+            pass
+
+        try:
             # for 3 times
             i = 0
             while i <= 2:
@@ -265,7 +279,7 @@ class ChatGptDriver:
 
     def __stream_message(self):
         try:
-            time.sleep(5)
+            self.wait_for_browsing()
             prev_content = ''
             while True:
                 self.driver.save_screenshot('stream_started.png')
@@ -355,3 +369,12 @@ class ChatGptDriver:
         Random sleep to avoid detection
         """
         time.sleep(random.uniform(sec, sec * multiplier))
+
+    def wait_for_browsing(self):
+        for _ in range(25):
+            result_streaming = self.driver.find_elements(*chatgpt_streaming)
+            if result_streaming:
+                content = result_streaming[-1].text
+                if content:
+                    break
+            time.sleep(1)
