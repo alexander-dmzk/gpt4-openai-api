@@ -16,8 +16,9 @@ async def get_statistic(message: str,
                             'gpt-4-browsing',
                             'gpt-4-plugins',
                             'text-davinci-002-render-sha'
-                        ]):
-    return await get_response(message, model)
+                        ],
+                        conversation_id=''):
+    return await get_response(message, model, conversation_id)
 
 
 @router.get('/sendMessageStream')
@@ -27,8 +28,9 @@ async def get_statistic(message: str,
                             'gpt-4-plugins',
                             'text-davinci-002-render-sha'
                         ],
-                        request: Request):
-    gen = await get_stream_response(message, model)
+                        request: Request,
+                        conversation_id=''):
+    gen = await get_stream_response(message, model, conversation_id)
 
     async def event_generator():
         while True:
