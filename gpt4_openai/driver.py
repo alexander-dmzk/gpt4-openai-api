@@ -82,12 +82,16 @@ class ChatGptDriver:
 
     def close_driver(self):
         """Close the browser and display"""
+        print('Closing driver')
         if self.is_active:
             self.is_active = False
             if hasattr(self, 'driver'):
                 self.driver.quit()
             if hasattr(self, 'display'):
                 self.display.stop()
+            print('Driver stopped')
+        else:
+            print('Driver is already inactive')
 
     def __enter__(self):
         self.__init_browser()
