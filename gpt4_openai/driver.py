@@ -289,6 +289,7 @@ class ChatGptDriver:
                 self.__sleep(0.1)
         finally:
             url = self.driver.current_url
+            self.driver.save_screenshot('test.jpg')
             self.close_driver()
             self.conversation_id = self.get_conversation_id(url)
             yield self.conversation_id
