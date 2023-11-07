@@ -271,6 +271,7 @@ class ChatGptDriver:
 
     def __stream_message(self):
         try:
+            time.sleep(1)
             prev_content = ''
             while True:
                 result_streaming = self.driver.find_elements(*chatgpt_streaming)
@@ -286,6 +287,7 @@ class ChatGptDriver:
                 if content != prev_content:
                     yield content[len(prev_content):]
                     prev_content = content
+                print('content: ', content)
                 if not result_streaming:
                     break
                 self.__sleep(0.1)
