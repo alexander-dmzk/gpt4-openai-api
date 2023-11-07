@@ -6,7 +6,6 @@ import re
 import time
 import weakref
 
-from markdownify import markdownify
 from selenium.common import exceptions as SeleniumExceptions
 from selenium.webdriver import Chrome, ChromeOptions, ChromeService
 from selenium.webdriver.common.by import By
@@ -15,6 +14,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
+
+from singleton import Singleton
 
 cf_challenge_form = (By.ID, 'challenge-form')
 
@@ -45,14 +46,14 @@ stop_generating = (By.XPATH, "//button[contains(., 'Stop generating')]")
 regenerate_response = (By.XPATH, "//*[.//div[contains(text(), 'Regenerate')]]")
 
 
-class ChatGptDriver:
+class ChatGptDriver(metaclass=Singleton):
     """
     An unofficial Python wrapper for OpenAI's ChatGPT API
     """
 
     def __init__(
             self,
-            session_token: str = None,
+            session_token,
             conversation_id: str = '',
             login_cookies_path: str = '',
             model: str = 'gpt4'
@@ -70,7 +71,6 @@ class ChatGptDriver:
 
         self.__session_token = session_token
         self.conversation_id = conversation_id
-        self.__login_cookies_path = login_cookies_path
 
         self._model = model
         self._chatgpt_chat_url = 'https://chat.openai.com'
@@ -78,6 +78,7 @@ class ChatGptDriver:
         self.conversation_id_pattern = re.compile(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
         )
+        self.is_active = False
 
         if not self.__session_token:
             raise ValueError(
@@ -95,6 +96,7 @@ class ChatGptDriver:
 
     def close_driver(self):
         """Close the browser and display"""
+        self.is_active = False
         if hasattr(self, 'driver'):
             self.driver.quit()
         if hasattr(self, 'display'):
@@ -117,6 +119,7 @@ class ChatGptDriver:
         """
         Initialize the browser
         """
+        self.is_active = True
         if platform.system() == 'Linux' and 'DISPLAY' not in os.environ:
             try:
                 from pyvirtualdisplay import Display
@@ -148,30 +151,17 @@ class ChatGptDriver:
         self.driver = Chrome(service=service, options=options)
         self.driver.implicitly_wait(10)
 
-        if self.__login_cookies_path and os.path.exists(
-                self.__login_cookies_path):
-            try:
-                with open(self.__login_cookies_path, 'r',
-                          encoding='utf-8') as f:
-                    cookies = json.load(f)
-                for cookie in cookies:
-                    if cookie['name'] == '__Secure-next-auth.session-token':
-                        self.__session_token = cookie['value']
-            except json.decoder.JSONDecodeError:
-                pass
-
-        if self.__session_token:
-            self.driver.execute_cdp_cmd(
-                'Network.setCookie',
-                {
-                    'domain': 'chat.openai.com',
-                    'path': '/',
-                    'name': '__Secure-next-auth.session-token',
-                    'value': self.__session_token,
-                    'httpOnly': True,
-                    'secure': True,
-                },
-            )
+        self.driver.execute_cdp_cmd(
+            'Network.setCookie',
+            {
+                'domain': 'chat.openai.com',
+                'path': '/',
+                'name': '__Secure-next-auth.session-token',
+                'value': self.__session_token,
+                'httpOnly': True,
+                'secure': True,
+            },
+        )
 
         self.__ensure_cf()
 
@@ -193,6 +183,7 @@ class ChatGptDriver:
                 self.driver.close()
                 self.driver.switch_to.window(original_window)
                 return self.__ensure_cf(retry - 1)
+            self.close_driver()
             raise ValueError('Cloudflare challenge failed')
 
         response = self.driver.page_source
@@ -203,6 +194,7 @@ class ChatGptDriver:
                 'error' in response and response['error'] ==
                 'RefreshAccessTokenError'
         ):
+            self.close_driver()
             raise ValueError('Invalid session token')
 
         self.driver.close()
@@ -245,7 +237,7 @@ class ChatGptDriver:
                 else:
                     # get the button with class="btn relative
                     # btn-primary ml-auto"
-                    btn = WebDriverWait(self.driver, 5).until(
+                    btn = WebDriverWait(self.driver, 10).until(
                         ec.presence_of_element_located(
                             (By.XPATH, '//button[@class="btn relative '
                                        'btn-primary ml-auto"]'))
@@ -277,12 +269,11 @@ class ChatGptDriver:
                     break
                 self.__sleep(0.1)
         finally:
-            # url = self.driver.current_url
             self.close_driver()
-            # self.conversation_id = self.get_conversation_id(url)
-            # yield self.conversation_id
 
     def send_message(self, message: str, model='gpt-4-browsing'):
+        if not self.is_active:
+            self.__init_browser()
         self._model = model
         self.driver.get(self._get_url())
         self.__check_blocking_elements()
@@ -337,12 +328,6 @@ class ChatGptDriver:
         button = textbox.find_element(By.XPATH, "./ancestor::div/button")
         button.click()
         return self.__stream_message()
-
-    def get_conversation_id(self, url):
-        print(url)
-        matches = self.conversation_id_pattern.search(url)
-        conversation_id = matches.group()
-        return conversation_id
 
     @staticmethod
     def __sleep(sec=1.0, multiplier=2) -> None:
