@@ -96,11 +96,12 @@ class ChatGptDriver(metaclass=Singleton):
 
     def close_driver(self):
         """Close the browser and display"""
-        self.is_active = False
-        if hasattr(self, 'driver'):
-            self.driver.quit()
-        if hasattr(self, 'display'):
-            self.display.stop()
+        if self.is_active:
+            self.is_active = False
+            if hasattr(self, 'driver'):
+                self.driver.quit()
+            if hasattr(self, 'display'):
+                self.display.stop()
 
     def __enter__(self):
         self.__init_browser()
@@ -213,6 +214,20 @@ class ChatGptDriver(metaclass=Singleton):
                     (By.XPATH,
                      '//div[@role="dialog"]//button[@class="btn relative '
                      'btn-primary"]'))
+            )
+            if btn_to_dismiss:
+                self.driver.execute_script('arguments[0].click()',
+                                           btn_to_dismiss)
+        except Exception:
+            pass
+
+        try:
+            # FInd a button to dismiss the dialog with
+            # class="btn relative btn-primary" inside the div[@role="dialog"]
+            btn_to_dismiss = WebDriverWait(self.driver, 5).until(
+                ec.presence_of_element_located(
+                    (By.XPATH,
+                     '//*[@id="radix-:r2i:"]/div/div[3]/button'))
             )
             if btn_to_dismiss:
                 self.driver.execute_script('arguments[0].click()',
