@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter
 from sse_starlette.sse import EventSourceResponse
 
-from server.logic import get_response, get_stream_response
+from server.logic import get_stream_response
 
 router = APIRouter(prefix='/api', tags=['main'])
 
