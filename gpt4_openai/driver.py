@@ -146,9 +146,11 @@ class ChatGptDriver:
             },
         )
         try:
+            self.driver.save_screenshot('before_cf.png')
             self.__ensure_cf()
         except Exception as e:
             print(e)
+            self.driver.save_screenshot('cf_challenge_failed.png')
             self.close_driver()
             pid = os.getpid()
             print(f'killing pid: {pid}')
