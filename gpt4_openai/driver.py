@@ -112,7 +112,7 @@ class ChatGptDriver:
         self.is_active = True
         if platform.system() == 'Linux' and 'DISPLAY' not in os.environ:
             try:
-                self.display = Display()
+                self.display = Display(size=(1920, 1080))
             except FileNotFoundError as e:
                 if 'No such file or directory: \'Xvfb\'' in str(e):
                     raise ValueError(
@@ -128,6 +128,7 @@ class ChatGptDriver:
         if os.getenv('CHROMIUM_PATH'):
             options.binary_location = os.environ['CHROMIUM_PATH']
         service = ChromeService(executable_path=driver_path)
+        options.add_argument('--window-size=1920x1080')
         options.add_argument('--no-sandbox')
         options.add_argument('--remote-debugging-port=9222')
         options.add_argument('--disable-dev-shm-usage')
