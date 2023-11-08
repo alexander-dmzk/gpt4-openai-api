@@ -85,22 +85,19 @@ class ChatGptDriver:
 
     def close_driver(self):
         """Close the browser and display"""
-        print('Closing driver')
-        if self.is_active:
-            self.is_active = False
-            self.driver.quit()
-            if isinstance(self.display, Display):
-                self.display.stop()
-            print('Driver stopped')
-        else:
-            print('Driver is already inactive')
-
-    def __enter__(self):
-        self.__init_browser()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close_driver()
+        try:
+            print('Closing driver')
+            if self.is_active:
+                self.is_active = False
+                self.driver.quit()
+                if isinstance(self.display, Display):
+                    self.display.stop()
+                print('Driver stopped')
+            else:
+                print('Driver is already inactive')
+        except Exception as e:
+            print(str(e))
+            pass
 
     def __del__(self):
         """
@@ -152,11 +149,10 @@ class ChatGptDriver:
             self.__ensure_cf()
         except Exception as e:
             print(e)
-            self.driver.save_screenshot('cf_error.png')
             self.close_driver()
             pid = os.getpid()
+            print(f'killing pid: {pid}')
             os.kill(pid, 9)
-            raise e
 
     def __ensure_cf(self) -> None:
         """Ensure Cloudflare cookies are set"""
@@ -169,7 +165,6 @@ class ChatGptDriver:
                 ec.presence_of_element_located(cf_challenge_form)
             )
         except SeleniumExceptions.TimeoutException:
-            self.close_driver()
             raise ValueError('Cloudflare challenge failed')
 
         response = self.driver.page_source
@@ -180,7 +175,6 @@ class ChatGptDriver:
                 'error' in response and response['error'] ==
                 'RefreshAccessTokenError'
         ):
-            self.close_driver()
             raise ValueError('Invalid session token')
 
         self.driver.close()

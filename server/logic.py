@@ -12,5 +12,6 @@ def get_stream_response(msg: str, model='gpt-4-browsing'):
         chatbot.driver.save_screenshot('error.png')
         chatbot.close_driver()
         pid = os.getpid()
+        print(f'killing pid: {pid}')
         os.kill(pid, 9)
         raise e

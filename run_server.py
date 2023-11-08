@@ -2,8 +2,6 @@ import subprocess
 import time
 from argparse import ArgumentParser
 
-import uvicorn
-
 if __name__ == '__main__':
     argparser = ArgumentParser()
     argparser.add_argument("--host", "-H", type=str,
