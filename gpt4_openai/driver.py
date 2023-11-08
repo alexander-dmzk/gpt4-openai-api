@@ -65,6 +65,8 @@ class ChatGptDriver:
         self._chatgpt_chat_url = 'https://chat.openai.com'
 
         self.is_active = False
+        self.driver: Chrome = ...
+        self.display = ...
 
         if not self.__session_token:
             raise ValueError(
@@ -85,10 +87,8 @@ class ChatGptDriver:
         print('Closing driver')
         if self.is_active:
             self.is_active = False
-            if hasattr(self, 'driver'):
-                self.driver.quit()
-            if hasattr(self, 'display'):
-                self.display.stop()
+            self.driver.quit()
+            self.display.stop()
             print('Driver stopped')
         else:
             print('Driver is already inactive')
@@ -156,11 +156,8 @@ class ChatGptDriver:
 
         self.__ensure_cf()
 
-    def __ensure_cf(self, retry: int = 3) -> None:
-        """
-        Ensure Cloudflare cookies are set\n
-        :param retry: Number of retries
-        """
+    def __ensure_cf(self) -> None:
+        """Ensure Cloudflare cookies are set"""
         original_window = self.driver.current_window_handle
         self.driver.switch_to.new_window('tab')
 
@@ -170,10 +167,6 @@ class ChatGptDriver:
                 ec.presence_of_element_located(cf_challenge_form)
             )
         except SeleniumExceptions.TimeoutException:
-            if retry > 0:
-                self.driver.close()
-                self.driver.switch_to.window(original_window)
-                return self.__ensure_cf(retry - 1)
             self.close_driver()
             raise ValueError('Cloudflare challenge failed')
 
