@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
+from pyvirtualdisplay import Display
 
 
 cf_challenge_form = (By.ID, 'challenge-form')
@@ -88,7 +89,8 @@ class ChatGptDriver:
         if self.is_active:
             self.is_active = False
             self.driver.quit()
-            self.display.stop()
+            if isinstance(self.display, Display):
+                self.display.stop()
             print('Driver stopped')
         else:
             print('Driver is already inactive')
@@ -113,14 +115,7 @@ class ChatGptDriver:
         self.is_active = True
         if platform.system() == 'Linux' and 'DISPLAY' not in os.environ:
             try:
-                from pyvirtualdisplay import Display
-
                 self.display = Display()
-            except ModuleNotFoundError:
-                raise ValueError(
-                    'Please install PyVirtualDisplay to start a virtual '
-                    'display by running `pip install PyVirtualDisplay`'
-                )
             except FileNotFoundError as e:
                 if 'No such file or directory: \'Xvfb\'' in str(e):
                     raise ValueError(
@@ -153,11 +148,19 @@ class ChatGptDriver:
                 'secure': True,
             },
         )
-
-        self.__ensure_cf()
+        try:
+            self.__ensure_cf()
+        except Exception as e:
+            print(e)
+            self.driver.save_screenshot('cf_error.png')
+            self.close_driver()
+            pid = os.getpid()
+            os.kill(pid, 9)
+            raise e
 
     def __ensure_cf(self) -> None:
         """Ensure Cloudflare cookies are set"""
+        raise ValueError('Cloudflare challenge failed')
         original_window = self.driver.current_window_handle
         self.driver.switch_to.new_window('tab')
 

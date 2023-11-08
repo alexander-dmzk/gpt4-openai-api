@@ -1,13 +1,29 @@
+import os
 from argparse import ArgumentParser
+from datetime import datetime
+from typing import Literal
 
 import uvicorn
 from fastapi import FastAPI
+from sse_starlette import EventSourceResponse
 from starlette.responses import Response
 
-from server.routes import router
+from server.logic import get_stream_response
 
 app = FastAPI(docs_url='/')
-app.include_router(router)
+
+
+@app.get('/api/sendMessageStream')
+def send_message(message: str,
+                 model: Literal[
+                     'gpt-4-browsing',
+                     'gpt-4-plugins',
+                     'text-davinci-002-render-sha'
+                 ]):
+    print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+          f'request received: {message}')
+    gen = get_stream_response(message, model)
+    return EventSourceResponse(gen)
 
 
 @app.get('/healthcheck')

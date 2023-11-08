@@ -8,6 +8,9 @@ def get_stream_response(msg: str, model='gpt-4-browsing'):
     try:
         return chatbot.send_message(msg, model=model)
     except Exception as e:
-        chatbot.driver.save_screenshot('test.png')
+        print(str(e))
+        chatbot.driver.save_screenshot('error.png')
         chatbot.close_driver()
+        pid = os.getpid()
+        os.kill(pid, 9)
         raise e
