@@ -160,7 +160,6 @@ class ChatGptDriver:
 
     def __ensure_cf(self) -> None:
         """Ensure Cloudflare cookies are set"""
-        raise ValueError('Cloudflare challenge failed')
         original_window = self.driver.current_window_handle
         self.driver.switch_to.new_window('tab')
 
